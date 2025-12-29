@@ -18,9 +18,12 @@ const register = async (req, res) => {
 
     let roleToAssign;
     let managerId = null;
+    let hrId = null;
 
-    if (loggedInRole === "Hr") roleToAssign = "Manager";
-    else if (loggedInRole === "Manager") {
+    if (loggedInRole === "Hr") {
+      hrId = loggedInUserId;
+      roleToAssign = "Manager";
+    } else if (loggedInRole === "Manager") {
       roleToAssign = "Employee";
       managerId = loggedInUserId;
     } else return res.status(403).json({ message: "Not allowed" });
@@ -121,6 +124,7 @@ const login = async (req, res) => {
     return res.status(200).json({
       message: "Login successful",
       data: safeUser,
+      token: token,
     });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
@@ -128,17 +132,20 @@ const login = async (req, res) => {
 };
 
 const logout = (req, res) => {
-  const role = req.userRole;
-  try {
-    res.clearCookie(`${role}Token`, {
-      httpOnly: true,
-      secure: process.env.NODE_ENVI === "production",
-      sameSite: "strict",
-    });
-    res.status(200).json({ message: "Logged out successfully" });
-  } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
-  }
+  const isProduction = process.env.ENVI === "production";
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/", // VERY IMPORTANT
+  };
+
+  res.clearCookie("HrToken", cookieOptions);
+  res.clearCookie("ManagerToken", cookieOptions);
+  res.clearCookie("EmployeeToken", cookieOptions);
+
+  return res.status(200).json({ message: "Logged out successfully" });
 };
 
 const getPublicHolidays = async (req, res) => {
@@ -157,9 +164,11 @@ const startAttendance = async (req, res) => {
     const today = new Date().toISOString().split("T")[0];
     const { imageUrl } = req.body;
 
-    if (!imageUrl)
+    if (!imageUrl) {
       return res.status(400).json({ message: "Start photo required" });
+    }
 
+    // ❌ Public holiday check
     const holiday = await isPublicHoliday(today);
     if (holiday) {
       return res.status(403).json({
@@ -167,15 +176,18 @@ const startAttendance = async (req, res) => {
       });
     }
 
+    // ❌ Already started?
     const existing = await Attendance.findOne({ userId, date: today });
-    if (existing && existing.startTime)
+    if (existing?.startTime) {
       return res.status(400).json({ message: "Attendance already started" });
+    }
 
+    // ✅ Create ONLY once
     const attendance = await Attendance.create({
       userId,
       date: today,
       startTime: new Date(),
-      startPhoto: imageUrl, // ✅ Cloudinary URL
+      startPhoto: imageUrl,
       status: "Incomplete",
     });
 
@@ -184,9 +196,12 @@ const startAttendance = async (req, res) => {
       data: attendance,
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+const REQUIRED_HOURS = 0.01; // company policy
 
 const endAttendance = async (req, res) => {
   try {
@@ -198,39 +213,84 @@ const endAttendance = async (req, res) => {
       return res.status(400).json({ message: "End photo required" });
     }
 
+    // 🔍 Find today's attendance
     const attendance = await Attendance.findOne({ userId, date: today });
 
-    if (!attendance || !attendance.startTime) {
+    if (!attendance) {
       return res.status(400).json({ message: "Attendance not started" });
     }
 
-    const tempEndTime = new Date();
-    const diffMs = tempEndTime - attendance.startTime;
-    const hours = diffMs / (1000 * 60 * 60);
-    const totalHours = Number(hours.toFixed(2));
+    if (!attendance.startTime) {
+      return res.status(400).json({ message: "Start attendance missing" });
+    }
 
-    if (totalHours < 8) {
-      return res.status(200).json({
-        message: `Work ${(8 - totalHours).toFixed(2)} more hours`,
-        workedHours: totalHours,
-        status: "INCOMPLETE",
+    // 🚫 Prevent double checkout
+    if (attendance.endTime) {
+      return res.status(400).json({
+        message: "Attendance already completed",
       });
     }
 
-    // ✅ Only now we finalize & save
-    attendance.endTime = tempEndTime;
+    const endTime = new Date();
+    const workedMs = endTime - attendance.startTime;
+    const workedHours = +(workedMs / (1000 * 60 * 60)).toFixed(2);
+
+    // 📸 Always save checkout photo & time
+    attendance.endTime = endTime;
     attendance.endPhoto = imageUrl;
-    attendance.totalHours = totalHours;
-    attendance.status = "Present";
+    attendance.totalHours = workedHours;
+
+    // 🟡/🟢 Status decision
+    if (workedHours >= REQUIRED_HOURS) {
+      attendance.status = "Present";
+    } else {
+      attendance.status = "Incomplete";
+    }
 
     await attendance.save();
 
     return res.status(200).json({
-      message: "Attendance completed",
+      message:
+        workedHours >= REQUIRED_HOURS
+          ? "Attendance completed successfully"
+          : `Attendance marked incomplete. Work ${(
+              REQUIRED_HOURS - workedHours
+            ).toFixed(2)} more hours`,
       data: attendance,
     });
   } catch (error) {
-    console.error(error);
+    console.error("End Attendance Error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+const updateProfileImage = async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    const userId = req.userId; // from verifyToken middleware
+
+    if (!imageUrl) {
+      return res.status(400).json({ message: "Image URL is required" });
+    }
+
+    console.log(imageUrl);
+    // Update only imageUrl
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { imageUrl },
+      { new: true, runValidators: true }
+    ).select("-password");
+    console.log(updatedUser);
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      message: "Profile image updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    console.error("Update image error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
@@ -243,4 +303,5 @@ export {
   startAttendance,
   endAttendance,
   getPublicHolidays,
+  updateProfileImage,
 };

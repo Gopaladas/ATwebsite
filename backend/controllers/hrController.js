@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import Holiday from "../models/holidayModel.js";
 import Attendance from "../models/attendanceModel.js";
+import Leave from "../models/leaveModel.js";
 
 const getHrDetails = async (req, res) => {
   const id = req.userId;
@@ -183,6 +184,111 @@ const viewAttendance = async (req, res) => {
   }
 };
 
+const getManagersAttendanceForHR = async (req, res) => {
+  try {
+    // Step 1: Find all managers
+    const managers = await User.find({ role: "Manager" }).select(
+      "_id userName email department"
+    );
+
+    if (!managers.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No managers found",
+      });
+    }
+
+    const managerIds = managers.map((m) => m._id);
+
+    // Step 2: Fetch attendance of those managers
+    const attendance = await Attendance.find({
+      userId: { $in: managerIds },
+    })
+      .populate("userId", "userName email department role")
+      .sort({ date: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: attendance.length,
+      data: attendance,
+    });
+  } catch (error) {
+    console.error("Error fetching manager attendance:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+const getTeamLeaves = async (req, res) => {
+  try {
+    console.log(req.userId);
+    const employees = await User.find({
+      hrId: req.userId,
+      role: "Manager",
+    }).select("_id");
+
+    if (!employees.length) {
+      return res.status(200).json({ data: [] });
+    }
+
+    console.log(employees);
+    const employeeIds = employees.map((emp) => emp._id);
+
+    const leaves = await Leave.find({
+      user: { $in: employeeIds },
+    })
+      .populate("user", "userName email department imageUrl")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ data: leaves });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const approveLeave = async (req, res) => {
+  try {
+    const leave = await Leave.findById(req.params.id);
+
+    if (!leave) {
+      return res.status(404).json({ message: "Leave not found" });
+    }
+
+    leave.status = "APPROVED";
+    leave.approvedBy = req.userId;
+    await leave.save();
+
+    await User.findByIdAndUpdate(leave.user, {
+      isOnLeave: true,
+      $inc: { leaveCount: -1 },
+    });
+
+    res.json({ message: "Leave approved" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const rejectLeave = async (req, res) => {
+  try {
+    const leave = await Leave.findById(req.params.id);
+
+    if (!leave) {
+      return res.status(404).json({ message: "Leave not found" });
+    }
+
+    leave.status = "REJECTED";
+    leave.approvedBy = req.userId;
+    await leave.save();
+
+    res.json({ message: "Leave rejected" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export {
   getHrDetails,
   getManagers,
@@ -191,4 +297,8 @@ export {
   activateManager,
   addPublicHoliday,
   viewAttendance,
+  getManagersAttendanceForHR,
+  getTeamLeaves,
+  approveLeave,
+  rejectLeave,
 };

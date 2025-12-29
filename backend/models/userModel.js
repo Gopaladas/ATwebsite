@@ -42,7 +42,11 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
     lastLoginAt: Date,
+    hrId: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
     managerId: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
+    imageUrl: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

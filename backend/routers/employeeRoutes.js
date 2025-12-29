@@ -2,6 +2,7 @@ import express from "express";
 import { employeeOnly, verifyToken } from "../middleware/authMiddleware.js";
 import {
   applyLeave,
+  cancelLeave,
   getEmployeeProfile,
   getMyAttendance,
   getMyLeaves,
@@ -19,5 +20,10 @@ employeeRouter.get("/leaves", verifyToken, employeeOnly, getMyLeaves);
 employeeRouter.get("/attendance", verifyToken, employeeOnly, getMyAttendance);
 
 employeeRouter.get("/holidays", verifyToken, employeeOnly, getHolidays);
-
+employeeRouter.delete(
+  "/cancel-leave/:leaveId",
+  verifyToken,
+  employeeOnly,
+  cancelLeave
+);
 export default employeeRouter;
