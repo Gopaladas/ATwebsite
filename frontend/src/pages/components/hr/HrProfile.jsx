@@ -26,7 +26,7 @@ const HRProfile = () => {
     bio: "",
   });
 
-  // ---------------- FETCH PROFILE ----------------
+  /* ---------------- FETCH PROFILE (ONLY ONCE) ---------------- */
   const fetchProfile = async () => {
     try {
       const res = await axios.get(`${hrURI}/getprofile`, {
@@ -40,23 +40,24 @@ const HRProfile = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, [profile]);
+  }, []); // ✅ FIXED
 
+  /* ---------------- SET FORM DATA WHEN PROFILE LOADS ---------------- */
   useEffect(() => {
-    if (profile) {
-      setFormData({
-        userName: profile.userName || "",
-        phoneNumber: profile.phoneNumber || "",
-        department: profile.department || "Human Resources",
-        bio: profile.bio || "",
-      });
-    }
+    if (!profile) return;
+
+    setFormData({
+      userName: profile.userName || "",
+      phoneNumber: profile.phoneNumber || "",
+      department: profile.department || "Human Resources",
+      bio: profile.bio || "",
+    });
   }, [profile]);
 
-  // ---------------- SAVE PROFILE ----------------
+  /* ---------------- SAVE PROFILE ---------------- */
   const handleSave = async () => {
     try {
-      await axios.put(`${userURI}/update-profile`, formData, {
+      await axios.put(`${hrURI}/update-profile`, formData, {
         withCredentials: true,
       });
 
@@ -68,7 +69,7 @@ const HRProfile = () => {
     }
   };
 
-  // ---------------- IMAGE UPLOAD ----------------
+  /* ---------------- IMAGE UPLOAD ---------------- */
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -79,7 +80,6 @@ const HRProfile = () => {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", preset);
-      data.append("folder", "items");
 
       const cloudRes = await axios.post(
         `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
@@ -135,7 +135,6 @@ const HRProfile = () => {
               <h2 className="text-2xl font-bold">{profile.userName}</h2>
               <p className="text-purple-100">HR Department</p>
               <p className="text-purple-200">{profile.email}</p>
-              <p className="mt-1 text-sm">HR ID: {profile._id.slice(-8)}</p>
             </div>
           </div>
         </div>
@@ -159,7 +158,6 @@ const HRProfile = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {/* LEFT */}
             <div className="space-y-4">
               <Field
                 icon={<User size={16} />}
@@ -184,7 +182,6 @@ const HRProfile = () => {
               />
             </div>
 
-            {/* RIGHT */}
             <div className="space-y-4">
               <Field
                 icon={<Building size={16} />}
@@ -195,16 +192,6 @@ const HRProfile = () => {
               />
 
               <StaticField label="Role" value={profile.role} />
-
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-sm ${
-                  profile.isActive
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                {profile.isActive ? "Active" : "Inactive"}
-              </span>
             </div>
           </div>
 

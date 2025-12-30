@@ -122,7 +122,13 @@ const HRDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard attendance={attendance} leaves={leaves} />;
+        return (
+          <Dashboard
+            attendance={attendance}
+            leaves={leaves}
+            managers={managers}
+          />
+        );
       case "profile":
         return <HRProfile />;
       case "managers":

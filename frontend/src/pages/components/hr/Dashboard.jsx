@@ -2,7 +2,7 @@ import React from "react";
 import { Users, CheckCircle, CalendarDays } from "lucide-react";
 import { mockAttendance } from "../../../utils/data";
 
-const Dashboard = ({ attendance, leaves }) => {
+const Dashboard = ({ attendance, leaves, managers }) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -10,7 +10,7 @@ const Dashboard = ({ attendance, leaves }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Managers</p>
-              <p className="text-3xl font-bold mt-2">4</p>
+              <p className="text-3xl font-bold mt-2">{managers.length}</p>
             </div>
             <div className="p-3 bg-blue-50 rounded-lg">
               <Users className="w-8 h-8 text-blue-600" />

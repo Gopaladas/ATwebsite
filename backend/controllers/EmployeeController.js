@@ -108,6 +108,34 @@ const getHolidays = async (req, res) => {
   res.json({ data: holidays });
 };
 
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.userId; // set by auth middleware
+    const { userName, phoneNumber, department, bio } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 🔒 Prevent role/email updates from frontend
+    user.userName = userName ?? user.userName;
+    user.phoneNumber = phoneNumber ?? user.phoneNumber;
+    user.department = department ?? user.department;
+    user.bio = bio ?? user.bio;
+
+    await user.save();
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 export {
   getEmployeeProfile,
   getHolidays,
@@ -115,4 +143,5 @@ export {
   getMyLeaves,
   applyLeave,
   cancelLeave,
+  updateProfile,
 };

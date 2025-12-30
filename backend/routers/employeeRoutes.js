@@ -6,6 +6,7 @@ import {
   getEmployeeProfile,
   getMyAttendance,
   getMyLeaves,
+  updateProfile,
 } from "../controllers/EmployeeController.js";
 import { getHolidays } from "../controllers/managerController.js";
 
@@ -26,4 +27,6 @@ employeeRouter.delete(
   employeeOnly,
   cancelLeave
 );
+
+employeeRouter.put("/update-profile", verifyToken, employeeOnly, updateProfile);
 export default employeeRouter;

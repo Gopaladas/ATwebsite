@@ -15,6 +15,7 @@ import {
   getTeamLeaves,
   getTodayAttendance,
   rejectLeave,
+  updateProfile,
 } from "../controllers/managerController.js";
 
 const managerRoute = express.Router();
@@ -68,5 +69,5 @@ managerRoute.get("/holidays", verifyToken, managerOnly, getHolidays);
 managerRoute.get("/getMyAttendance", verifyToken, managerOnly, getMyAttendance);
 managerRoute.post("/applyLeave", verifyToken, managerOnly, applyLeave);
 managerRoute.get("/getMyLeaves", verifyToken, managerOnly, getMyLeaves);
-
+managerRoute.put("/update-profile", verifyToken, managerOnly, updateProfile);
 export default managerRoute;

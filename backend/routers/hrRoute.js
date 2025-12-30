@@ -10,6 +10,7 @@ import {
   getManagersAttendanceForHR,
   getTeamLeaves,
   rejectLeave,
+  updateProfile,
   viewAttendance,
 } from "../controllers/hrController.js";
 import { onlyHr, verifyToken } from "../middleware/authMiddleware.js";
@@ -33,4 +34,6 @@ hrRoute.get(
 hrRoute.get("/getTeamLeaves", verifyToken, onlyHr, getTeamLeaves);
 hrRoute.patch("/leaves/:id/approve", verifyToken, onlyHr, approveLeave);
 hrRoute.patch("/leaves/:id/reject", verifyToken, onlyHr, rejectLeave);
+hrRoute.put("/update-profile", verifyToken, onlyHr, updateProfile);
+
 export default hrRoute;

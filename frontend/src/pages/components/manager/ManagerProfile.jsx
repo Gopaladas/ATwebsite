@@ -26,7 +26,7 @@ const ManagerProfile = () => {
     bio: "",
   });
 
-  // ---------------- FETCH PROFILE ----------------
+  /* ---------------- FETCH PROFILE ---------------- */
   const fetchProfile = async () => {
     try {
       const res = await axios.get(`${managerURI}/profile`, {
@@ -42,21 +42,22 @@ const ManagerProfile = () => {
     fetchProfile();
   }, []);
 
+  /* ---------------- SET FORM DATA ---------------- */
   useEffect(() => {
-    if (profile) {
-      setFormData({
-        userName: profile.userName || "",
-        phoneNumber: profile.phoneNumber || "",
-        department: profile.department || "",
-        bio: profile.bio || "",
-      });
-    }
+    if (!profile) return;
+
+    setFormData({
+      userName: profile.userName || "",
+      phoneNumber: profile.phoneNumber || "",
+      department: profile.department || "",
+      bio: profile.bio || "",
+    });
   }, [profile]);
 
-  // ---------------- SAVE PROFILE ----------------
+  /* ---------------- SAVE PROFILE ---------------- */
   const handleSave = async () => {
     try {
-      await axios.put(`${userURI}/update-profile`, formData, {
+      await axios.put(`${managerURI}/update-profile`, formData, {
         withCredentials: true,
       });
 
@@ -68,7 +69,7 @@ const ManagerProfile = () => {
     }
   };
 
-  // ---------------- IMAGE UPLOAD ----------------
+  /* ---------------- IMAGE UPLOAD ---------------- */
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -79,7 +80,6 @@ const ManagerProfile = () => {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", preset);
-      data.append("folder", "manager_profiles");
 
       const cloudRes = await axios.post(
         `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
@@ -161,7 +161,6 @@ const ManagerProfile = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {/* LEFT */}
             <div className="space-y-4">
               <Field
                 icon={<User size={16} />}
@@ -186,7 +185,6 @@ const ManagerProfile = () => {
               />
             </div>
 
-            {/* RIGHT */}
             <div className="space-y-4">
               <Field
                 icon={<Building size={16} />}

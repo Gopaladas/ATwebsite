@@ -2,6 +2,7 @@ import User from "../models/userModel.js";
 import Holiday from "../models/holidayModel.js";
 import Attendance from "../models/attendanceModel.js";
 import Leave from "../models/leaveModel.js";
+import sendEmail from "../utils/sendEmail.js";
 
 const getHrDetails = async (req, res) => {
   const id = req.userId;
@@ -250,7 +251,7 @@ const getTeamLeaves = async (req, res) => {
 
 const approveLeave = async (req, res) => {
   try {
-    const leave = await Leave.findById(req.params.id);
+    const leave = await Leave.findById(req.params.id).populate("user");
 
     if (!leave) {
       return res.status(404).json({ message: "Leave not found" });
@@ -260,12 +261,33 @@ const approveLeave = async (req, res) => {
     leave.approvedBy = req.userId;
     await leave.save();
 
-    await User.findByIdAndUpdate(leave.user, {
+    const hr = await User.findById(req.userId);
+
+    // Update manager leave status
+    await User.findByIdAndUpdate(leave.user._id, {
       isOnLeave: true,
       $inc: { leaveCount: -1 },
     });
 
-    res.json({ message: "Leave approved" });
+    // 📧 EMAIL TO MANAGER
+    await sendEmail({
+      from: {
+        name: hr.userName,
+        email: hr.email,
+      },
+      to: leave.user.email,
+      subject: "Leave Approved ✅",
+      html: `
+        <p>Hello ${leave.user.userName},</p>
+        <p>Your <b>${leave.leaveType}</b> leave has been <b>approved</b>.</p>
+        <p><b>From:</b> ${leave.fromDate.toDateString()}</p>
+        <p><b>To:</b> ${leave.toDate.toDateString()}</p>
+        <br/>
+        <p>Regards,<br/>${hr.userName} (HR)</p>
+      `,
+    });
+
+    res.json({ message: "Leave approved and email sent" });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
@@ -273,7 +295,7 @@ const approveLeave = async (req, res) => {
 
 const rejectLeave = async (req, res) => {
   try {
-    const leave = await Leave.findById(req.params.id);
+    const leave = await Leave.findById(req.params.id).populate("user");
 
     if (!leave) {
       return res.status(404).json({ message: "Leave not found" });
@@ -283,9 +305,56 @@ const rejectLeave = async (req, res) => {
     leave.approvedBy = req.userId;
     await leave.save();
 
-    res.json({ message: "Leave rejected" });
+    const hr = await User.findById(req.userId);
+
+    // 📧 EMAIL TO MANAGER
+    await sendEmail({
+      from: {
+        name: hr.userName,
+        email: hr.email,
+      },
+      to: leave.user.email,
+      subject: "Leave Rejected ❌",
+      html: `
+        <p>Hello ${leave.user.userName},</p>
+        <p>Your <b>${leave.leaveType}</b> leave has been <b>rejected</b>.</p>
+        <p>Please contact HR for more details.</p>
+        <br/>
+        <p>Regards,<br/>${hr.userName} (HR)</p>
+      `,
+    });
+
+    res.json({ message: "Leave rejected and email sent" });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.userId; // set by auth middleware
+    const { userName, phoneNumber, department, bio } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 🔒 Prevent role/email updates from frontend
+    user.userName = userName ?? user.userName;
+    user.phoneNumber = phoneNumber ?? user.phoneNumber;
+    user.department = department ?? user.department;
+    user.bio = bio ?? user.bio;
+
+    await user.save();
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -301,4 +370,5 @@ export {
   getTeamLeaves,
   approveLeave,
   rejectLeave,
+  updateProfile,
 };
