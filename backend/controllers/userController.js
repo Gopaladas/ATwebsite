@@ -44,6 +44,7 @@ const register = async (req, res) => {
       role: roleToAssign,
       department,
       managerId,
+      hrId,
     });
 
     const { password: _, ...safeUser } = createdUser._doc;
