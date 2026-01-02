@@ -1,10 +1,12 @@
 import express from "express";
 import {
   endAttendance,
+  forgotPassword,
   getPublicHolidays,
   login,
   logout,
   register,
+  resetPassword,
   seedHr,
   startAttendance,
   updateProfileImage,
@@ -21,5 +23,6 @@ userRoute.get("/getPublicHolidays", verifyToken, getPublicHolidays);
 userRoute.post("/start", verifyToken, startAttendance);
 userRoute.post("/end", verifyToken, endAttendance);
 userRoute.patch("/update-image", verifyToken, updateProfileImage);
-
+userRoute.post("/forgotPassword", forgotPassword);
+userRoute.post("/resetPassword", resetPassword);
 export default userRoute;

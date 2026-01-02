@@ -6,6 +6,7 @@ import HrDashboard from "./pages/HrDashBoard";
 import ManagerDashboardPage from "./pages/ManagerDashBoard";
 import ProtectedRoute from "./protectedRoute";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
+import ResetPassword from "./pages/ResetPassword.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute";
 
@@ -17,7 +18,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-
+      <Route path="/reset-password" element={<ResetPassword />} />
       {/* HR Protected Route */}
       <Route
         path="/hr/dashboard"

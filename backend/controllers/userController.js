@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import Holiday from "../models/holidayModel.js";
 import Attendance from "../models/attendanceModel.js";
 import isPublicHoliday from "../utils/isPublicHoliday.js";
+import sendEmail from "../utils/sendEmail.js";
 
 const register = async (req, res) => {
   try {
@@ -296,6 +297,86 @@ const updateProfileImage = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save OTP
+    user.otp = otp;
+    await user.save();
+
+    // Send OTP email
+    await sendEmail({
+      from: {
+        name: "HRMS Support",
+        email: process.env.EMAIL_USER,
+      },
+      to: user.email,
+      subject: "Password Reset OTP",
+      html: `
+        <p>Hello <b>${user.userName}</b>,</p>
+
+        <p>Your One-Time Password (OTP) for password reset is:</p>
+
+        <h2 style="letter-spacing:2px;">${otp}</h2>
+
+        <p>This OTP is valid for one use only.</p>
+
+        <br/>
+        <a href="http://localhost:5173/reset-password">Reset Password</a>
+        <br/>
+        <p>Regards,<br/>HRMS Team</p>
+      `,
+    });
+
+    res.json({ message: "OTP sent to email" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, password, confirmPassword } = req.body;
+
+    if (!email || !otp || !password || !confirmPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user || user.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user.password = hashedPassword;
+    user.otp = ""; // clear OTP
+    await user.save();
+
+    res.json({ message: "Password reset successful" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export {
   register,
   login,
@@ -305,4 +386,6 @@ export {
   endAttendance,
   getPublicHolidays,
   updateProfileImage,
+  forgotPassword,
+  resetPassword,
 };
