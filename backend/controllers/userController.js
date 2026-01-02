@@ -332,7 +332,7 @@ const forgotPassword = async (req, res) => {
         <p>This OTP is valid for one use only.</p>
 
         <br/>
-        <a href="http://localhost:5173/reset-password">Reset Password</a>
+        <a href="${process.env.FRONTEND_URI}/reset-password">Reset Password</a>
         <br/>
         <p>Regards,<br/>HRMS Team</p>
       `,
