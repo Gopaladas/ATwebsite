@@ -99,7 +99,8 @@ const login = async (req, res) => {
     // 🔴 CHECK IF USER IS ACTIVE
     if (!userExist.isActive) {
       return res.status(403).json({
-        message: "Your account is inactive. Please contact HR.",
+        message:
+          "Your account is inactive. Please contact your higher officials.",
       });
     }
 
