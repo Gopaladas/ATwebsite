@@ -91,20 +91,45 @@ const HRDashboard = () => {
     fetchAttendance();
   }, []);
 
-  const handleActivateManager = (id) => {
-    setManagers(
-      managers.map((manager) =>
-        manager.id === id ? { ...manager, status: "active" } : manager
-      )
-    );
+  const handleActivateManager = async (id) => {
+    try {
+      await axios.patch(
+        `${hrURI}/activateManager/${id}`,
+        { isActive: true },
+        { withCredentials: true }
+      );
+
+      await fetchManagers();
+
+      setManagers((prev) =>
+        prev.map((manager) =>
+          manager._id === id ? { ...manager, isActive: true } : manager
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Failed to activate manager");
+    }
   };
 
-  const handleDeactivateManager = (id) => {
-    setManagers(
-      managers.map((manager) =>
-        manager.id === id ? { ...manager, status: "inactive" } : manager
-      )
-    );
+  const handleDeactivateManager = async (id) => {
+    try {
+      await axios.patch(
+        `${hrURI}/deleteManager/${id}`,
+        { isActive: false },
+        { withCredentials: true }
+      );
+
+      await fetchManagers();
+      setManagers((prev) =>
+        prev.map((manager) =>
+          manager._id === id ? { ...manager, isActive: false } : manager
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Failed to deactivate manager");
+    }
   };
 
   const handleLogout = async () => {

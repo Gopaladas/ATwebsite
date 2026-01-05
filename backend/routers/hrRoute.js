@@ -20,8 +20,8 @@ const hrRoute = express.Router();
 hrRoute.get("/getprofile", verifyToken, onlyHr, getHrDetails);
 hrRoute.get("/getManagers", verifyToken, onlyHr, getManagers);
 hrRoute.get("/getEmployees", verifyToken, onlyHr, getEmployees);
-hrRoute.get("/activateManger/:id", verifyToken, onlyHr, activateManager);
-hrRoute.get("/deleteManager/:id", verifyToken, onlyHr, deleteManager);
+hrRoute.patch("/activateManager/:id", verifyToken, onlyHr, activateManager);
+hrRoute.patch("/deleteManager/:id", verifyToken, onlyHr, deleteManager);
 hrRoute.post("/addHoliday", verifyToken, onlyHr, addPublicHoliday);
 hrRoute.get("/attendance", verifyToken, onlyHr, viewAttendance);
 hrRoute.get(

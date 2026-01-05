@@ -93,7 +93,15 @@ const login = async (req, res) => {
 
   try {
     const userExist = await User.findOne({ email });
+
     if (!userExist) return res.status(400).json({ message: "User not found" });
+
+    // 🔴 CHECK IF USER IS ACTIVE
+    if (!userExist.isActive) {
+      return res.status(403).json({
+        message: "Your account is inactive. Please contact HR.",
+      });
+    }
 
     const verifyPassword = await bcrypt.compare(password, userExist.password);
 
@@ -101,7 +109,6 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Password incorrect" });
 
     let expiry;
-
     if (userExist.role === "Hr") expiry = "1h";
     else if (userExist.role === "Manager") expiry = "2h";
     else expiry = "8h";
@@ -115,18 +122,22 @@ const login = async (req, res) => {
     const isProduction = process.env.ENVI === "production";
 
     res.cookie(`${userExist.role}Token`, token, {
-      httpOnly: true, // JS cannot access
-      secure: isProduction, // HTTPS only in prod
+      httpOnly: true,
+      secure: isProduction,
       sameSite: isProduction ? "none" : "lax",
-      maxAge: 1000 * 60 * 60, // 1 hour (browser-side)
+      maxAge: 1000 * 60 * 60, // 1 hour
     });
+
+    // Update last login time
+    userExist.lastLoginAt = new Date();
+    await userExist.save();
 
     const { password: _, ...safeUser } = userExist._doc;
 
     return res.status(200).json({
       message: "Login successful",
       data: safeUser,
-      token: token,
+      token,
     });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
