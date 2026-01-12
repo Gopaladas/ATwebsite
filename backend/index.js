@@ -21,10 +21,12 @@ import userRoute from "./routers/userRoute.js";
 import hrRoute from "./routers/hrRoute.js";
 import managerRoute from "./routers/managerRoute.js";
 import employeeRouter from "./routers/employeeRoutes.js";
+import superAdminRoute from "./routers/superAdminRoutes.js";
 app.use("/user", userRoute);
 app.use("/hr", hrRoute);
 app.use("/manager", managerRoute);
 app.use("/employee", employeeRouter);
+app.use("/superAdmin", superAdminRoute);
 
 app.listen(process.env.PORT, () => {
   console.log(`server is running at ${process.env.PORT}`);

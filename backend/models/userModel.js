@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+
     email: {
       type: String,
       required: true,
@@ -14,43 +15,61 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+
     password: {
       type: String,
       required: true,
     },
+
     role: {
       type: String,
-      enum: ["Employee", "Manager", "Hr"],
+      enum: ["SuperAdmin", "Hr", "Manager", "Employee"],
       default: "Employee",
     },
-    phoneNumber: {
-      type: String,
-    },
-    department: {
-      type: String,
-    },
+
+    phoneNumber: String,
+    department: String,
+
     isOnLeave: {
       type: Boolean,
       default: false,
     },
+
     isActive: {
       type: Boolean,
       default: true,
     },
+
     leaveCount: {
       type: Number,
       default: 0,
     },
+
     lastLoginAt: Date,
-    hrId: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
-    managerId: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
-    imageUrl: {
-      type: String,
+
+    // 🔗 Hierarchy references
+    superAdminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
     },
+
+    hrId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
+    },
+
+    managerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
+    },
+
+    imageUrl: String,
+
     bio: {
       type: String,
       default: "",
     },
+
     otp: {
       type: String,
       default: "",

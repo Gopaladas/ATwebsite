@@ -8,6 +8,7 @@ import {
   register,
   resetPassword,
   seedHr,
+  seedSuperAdmin,
   startAttendance,
   updateProfileImage,
 } from "../controllers/userController.js";
@@ -25,4 +26,5 @@ userRoute.post("/end", verifyToken, endAttendance);
 userRoute.patch("/update-image", verifyToken, updateProfileImage);
 userRoute.post("/forgotPassword", forgotPassword);
 userRoute.post("/resetPassword", resetPassword);
+userRoute.get("/seedSuperAdmin", seedSuperAdmin);
 export default userRoute;

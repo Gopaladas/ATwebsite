@@ -177,7 +177,7 @@ const HRDashboard = () => {
       case "leaves":
         return <Leaves leaves={leaves} />;
       case "settings":
-        return <Settings />;
+        return <SettingsPage />;
       default:
         return <Dashboard attendance={attendance} leaves={leaves} />;
     }

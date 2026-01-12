@@ -4,6 +4,7 @@ import {
   addPublicHoliday,
   approveLeave,
   deleteManager,
+  getAllHolidays,
   getEmployees,
   getHrDetails,
   getManagers,
@@ -35,5 +36,6 @@ hrRoute.get("/getTeamLeaves", verifyToken, onlyHr, getTeamLeaves);
 hrRoute.patch("/leaves/:id/approve", verifyToken, onlyHr, approveLeave);
 hrRoute.patch("/leaves/:id/reject", verifyToken, onlyHr, rejectLeave);
 hrRoute.put("/update-profile", verifyToken, onlyHr, updateProfile);
+hrRoute.get("/holidays", verifyToken, onlyHr, getAllHolidays);
 
 export default hrRoute;

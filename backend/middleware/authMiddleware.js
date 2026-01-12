@@ -1,7 +1,12 @@
 import jwt from "jsonwebtoken";
 
 const verifyToken = async (req, res, next) => {
-  const possibleTokens = ["HrToken", "EmployeeToken", "ManagerToken"];
+  const possibleTokens = [
+    "SuperAdminToken",
+    "HrToken",
+    "EmployeeToken",
+    "ManagerToken",
+  ];
 
   let token;
 
@@ -27,6 +32,13 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
+const superAdminOnly = (req, res, next) => {
+  if (req.userRole !== "SuperAdmin") {
+    return res.status(403).json({ message: "SuperAdmin access only" });
+  }
+  next();
+};
+
 const onlyHr = (req, res, next) => {
   if (req.userRole !== "Hr")
     return res.status(403).json({ message: "HR access only" });
@@ -47,4 +59,4 @@ const employeeOnly = (req, res, next) => {
   next();
 };
 
-export { verifyToken, onlyHr, managerOnly, employeeOnly };
+export { verifyToken, superAdminOnly, onlyHr, managerOnly, employeeOnly };

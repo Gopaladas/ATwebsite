@@ -31,15 +31,16 @@ const Login = () => {
       const role = res.data.data.role;
       localStorage.setItem("role", role);
 
-      if (role === "Hr") {
-        // localStorage.setItem({ role:role });
+      if (role === "SuperAdmin") {
+        navigate("/superadmin/dashboard");
+      } else if (role === "Hr") {
         navigate("/hr/dashboard");
       } else if (role === "Manager") {
-        // localStorage.setItem({ ManagerToken: res.token });
         navigate("/manager/dashboard");
-      } else {
-        // localStorage.setItem({ EmployeeToken: token });
+      } else if (role === "Employee") {
         navigate("/employee/dashboard");
+      } else {
+        alert("Unknown role");
       }
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");

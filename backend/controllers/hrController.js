@@ -20,7 +20,11 @@ const getHrDetails = async (req, res) => {
 
 const getManagers = async (req, res) => {
   try {
-    const list = await User.find({ role: "Manager" }, "-password");
+    console.log(req.userId);
+    const list = await User.find(
+      { hrId: req.userId, role: "Manager" },
+      "-password"
+    );
     return res
       .status(200)
       .json({ message: "successfully fetched", data: list });
@@ -31,7 +35,10 @@ const getManagers = async (req, res) => {
 
 const getEmployees = async (req, res) => {
   try {
-    const list = await User.find({ role: "Employee" }, "-password");
+    const list = await User.find(
+      { _id: req.userId, role: "Employee" },
+      "-password"
+    );
     return res
       .status(200)
       .json({ message: "successfully fetched", data: list });
@@ -113,9 +120,9 @@ const addPublicHoliday = async (req, res) => {
 
     const existingHoliday = await Holiday.findOne({ date: holidayDate });
     if (existingHoliday) {
-      return res.status(409).json({
-        message: "Holiday already exists for this date",
-      });
+      return res
+        .status(409)
+        .json({ message: "Holiday already exists for this date" });
     }
 
     const holiday = await Holiday.create({
@@ -126,13 +133,13 @@ const addPublicHoliday = async (req, res) => {
       createdBy: req.userId,
     });
 
-    return res.status(201).json({
-      message: "Public holiday added successfully",
+    res.status(201).json({
+      message: "Holiday added successfully",
       data: holiday,
     });
   } catch (error) {
     console.error("Add holiday error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -188,9 +195,10 @@ const viewAttendance = async (req, res) => {
 const getManagersAttendanceForHR = async (req, res) => {
   try {
     // Step 1: Find all managers
-    const managers = await User.find({ role: "Manager" }).select(
-      "_id userName email department"
-    );
+    const managers = await User.find({
+      role: "Manager",
+      hrId: req.userId,
+    }).select("_id userName email department");
 
     if (!managers.length) {
       return res.status(404).json({
@@ -358,6 +366,25 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const getAllHolidays = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // normalize time
+
+    const currentYear = today.getFullYear();
+
+    const holidays = await Holiday.find({
+      year: currentYear,
+      date: { $gte: today },
+    }).sort({ date: 1 }); // nearest first
+
+    res.json({ data: holidays });
+  } catch (error) {
+    console.error("Fetch holidays error:", error);
+    res.status(500).json({ message: "Failed to fetch holidays" });
+  }
+};
+
 export {
   getHrDetails,
   getManagers,
@@ -371,4 +398,5 @@ export {
   approveLeave,
   rejectLeave,
   updateProfile,
+  getAllHolidays,
 };

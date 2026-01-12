@@ -10,6 +10,7 @@ const holidaySchema = new mongoose.Schema(
     date: {
       type: Date,
       required: true,
+      unique: true,
     },
     year: {
       type: Number,
@@ -17,18 +18,17 @@ const holidaySchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["National", "State", "Company"],
-      default: "Company",
+      enum: ["PUBLIC", "COMPANY", "OPTIONAL"],
+      default: "PUBLIC",
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users", // HR who created
+      ref: "users",
+      required: true,
     },
   },
   { timestamps: true }
 );
-
-holidaySchema.index({ date: 1 }, { unique: true });
 
 const Holiday = mongoose.model("Holiday", holidaySchema);
 export default Holiday;

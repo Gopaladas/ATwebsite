@@ -11,51 +11,77 @@ const register = async (req, res) => {
   try {
     const { email, userName, password, phoneNumber, department } = req.body;
     const loggedInRole = req.userRole;
-    // console.log(loggedInRole);
     const loggedInUserId = req.userId;
 
-    if (!email || !userName || !password || !phoneNumber || !department)
-      return res.status(400).json({ message: "Enter the fields" });
+    if (!email || !userName || !password)
+      return res.status(400).json({ message: "Missing fields" });
 
     let roleToAssign;
-    let managerId = null;
+    let superAdminId = null;
     let hrId = null;
+    let managerId = null;
 
-    if (loggedInRole === "Hr") {
-      hrId = loggedInUserId;
+    if (loggedInRole === "SuperAdmin") {
+      roleToAssign = "Hr";
+      superAdminId = loggedInUserId;
+    } else if (loggedInRole === "Hr") {
       roleToAssign = "Manager";
+      hrId = loggedInUserId;
     } else if (loggedInRole === "Manager") {
       roleToAssign = "Employee";
       managerId = loggedInUserId;
-    } else return res.status(403).json({ message: "Not allowed" });
+    } else {
+      return res.status(403).json({ message: "Not allowed" });
+    }
 
-    const user = await User.findOne({ email });
-    if (user)
-      return res
-        .status(401)
-        .json({ message: "User already exist with this email" });
+    const existing = await User.findOne({ email });
+    if (existing)
+      return res.status(409).json({ message: "User already exists" });
 
-    const hashPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const createdUser = await User.create({
+    const user = await User.create({
       email,
       userName,
-      password: hashPassword,
+      password: hashedPassword,
       phoneNumber,
-      role: roleToAssign,
       department,
-      managerId,
+      role: roleToAssign,
+      superAdminId,
       hrId,
+      managerId,
     });
 
-    const { password: _, ...safeUser } = createdUser._doc;
+    const { password: _, ...safeUser } = user._doc;
 
-    return res
-      .status(200)
-      .json({ message: "Successfully created", data: safeUser });
+    res.status(201).json({
+      message: `${roleToAssign} created successfully`,
+      data: safeUser,
+    });
   } catch (error) {
-    return res.status(500).json({ message: error });
+    res.status(500).json({ message: "Server error" });
   }
+};
+
+const seedSuperAdmin = async (req, res) => {
+  const existing = await User.findOne({ role: "SuperAdmin" });
+  if (existing) {
+    return res.status(409).json({ message: "SuperAdmin already exists" });
+  }
+
+  const hashedPassword = await bcrypt.hash("Gaint@123", 10);
+
+  const superAdmin = await User.create({
+    userName: "SuperAdmin",
+    email: "gaintclout@gmail.com",
+    password: hashedPassword,
+    role: "SuperAdmin",
+  });
+
+  res.status(201).json({
+    message: "SuperAdmin created",
+    id: superAdmin._id,
+  });
 };
 
 const seedHr = async (req, res) => {
@@ -88,15 +114,17 @@ const seedHr = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password)
+  if (!email || !password) {
     return res.status(400).json({ message: "Enter all fields" });
+  }
 
   try {
     const userExist = await User.findOne({ email });
+    if (!userExist) {
+      return res.status(400).json({ message: "User not found" });
+    }
 
-    if (!userExist) return res.status(400).json({ message: "User not found" });
-
-    // 🔴 CHECK IF USER IS ACTIVE
+    // 🔴 CHECK ACTIVE STATUS
     if (!userExist.isActive) {
       return res.status(403).json({
         message:
@@ -104,15 +132,29 @@ const login = async (req, res) => {
       });
     }
 
-    const verifyPassword = await bcrypt.compare(password, userExist.password);
+    const isPasswordValid = await bcrypt.compare(password, userExist.password);
 
-    if (!verifyPassword)
+    if (!isPasswordValid) {
       return res.status(400).json({ message: "Password incorrect" });
+    }
 
+    // 🔐 Role-based expiry
     let expiry;
-    if (userExist.role === "Hr") expiry = "1h";
-    else if (userExist.role === "Manager") expiry = "2h";
-    else expiry = "8h";
+    let maxAge;
+
+    if (userExist.role === "Hr") {
+      expiry = "1h";
+      maxAge = 1000 * 60 * 60;
+    } else if (userExist.role === "Manager") {
+      expiry = "2h";
+      maxAge = 1000 * 60 * 60 * 2;
+    } else if (userExist.role === "SuperAdmin") {
+      expiry = "4h";
+      maxAge = 1000 * 60 * 60 * 4;
+    } else {
+      expiry = "8h";
+      maxAge = 1000 * 60 * 60 * 8;
+    }
 
     const token = jwt.sign(
       { id: userExist._id, role: userExist.role },
@@ -126,10 +168,11 @@ const login = async (req, res) => {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? "none" : "lax",
-      maxAge: 1000 * 60 * 60, // 1 hour
+      maxAge,
+      path: "/", // 🔥 MUST match logout
     });
 
-    // Update last login time
+    // Update last login
     userExist.lastLoginAt = new Date();
     await userExist.save();
 
@@ -138,9 +181,9 @@ const login = async (req, res) => {
     return res.status(200).json({
       message: "Login successful",
       data: safeUser,
-      token,
     });
   } catch (error) {
+    console.error("LOGIN ERROR:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -152,14 +195,17 @@ const logout = (req, res) => {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
-    path: "/", // VERY IMPORTANT
+    path: "/", // 🔥 MUST be same as login
   };
 
+  res.clearCookie("SuperAdminToken", cookieOptions);
   res.clearCookie("HrToken", cookieOptions);
   res.clearCookie("ManagerToken", cookieOptions);
   res.clearCookie("EmployeeToken", cookieOptions);
 
-  return res.status(200).json({ message: "Logged out successfully" });
+  return res.status(200).json({
+    message: "Logged out successfully",
+  });
 };
 
 const getPublicHolidays = async (req, res) => {
@@ -400,4 +446,5 @@ export {
   updateProfileImage,
   forgotPassword,
   resetPassword,
+  seedSuperAdmin,
 };
