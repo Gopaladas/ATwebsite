@@ -9,6 +9,7 @@ import {
   Home,
   Clock,
   CalendarDays,
+  MessageCircle,
 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +23,7 @@ import TeamLeaves from "./components/manager/TeamLeaves";
 import ManagerSettings from "./components/manager/ManagerSettings";
 import ManagerAttendance from "./components/manager/ManagerAttendance";
 import ManagerLeaves from "./components/manager/ManagerLeaves";
+import ChatPage from "./Chat/ChatPage";
 
 const ManagerDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -29,7 +31,7 @@ const ManagerDashboardPage = () => {
   const [attendance, setAttendance] = useState([]);
   const [leaves, setLeaves] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [profile, setProfile] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,6 +39,21 @@ const ManagerDashboardPage = () => {
     fetchAttendance();
     fetchLeaves();
   }, []);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await axios.get(`${managerURI}/profile`, {
+        withCredentials: true,
+      });
+      setProfile(res.data.data);
+    } catch (err) {
+      console.error("Profile fetch error", err);
+    }
+  };
 
   /* ================= TEAM ================= */
   const fetchTeam = async () => {
@@ -68,7 +85,7 @@ const ManagerDashboardPage = () => {
 
       const res = await axios.get(
         `${managerURI}/team-attendance?date=${today}`,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       const formatted = res.data.data.map((att) => ({
@@ -151,6 +168,9 @@ const ManagerDashboardPage = () => {
         return <TeamAttendance attendance={attendance} />;
       case "leaves":
         return <TeamLeaves leaves={leaves} />;
+      case "chat":
+        return <ChatPage user={profile} />;
+
       case "settings":
         return <ManagerSettings />;
       default:
@@ -175,6 +195,7 @@ const ManagerDashboardPage = () => {
             ["myleaves", CalendarDays, "My leaves"],
             ["attendance", Clock, "Attendance"],
             ["leaves", CalendarDays, "Leaves"],
+            ["chat", MessageCircle, "Chat"],
             ["settings", Settings, "Settings"],
           ].map(([key, Icon, label]) => (
             <button

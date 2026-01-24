@@ -5,7 +5,7 @@ const employeeURI = `${backendURI}/employee`;
 const managerURI = `${backendURI}/manager`;
 const hrURI = `${backendURI}/hr`;
 const superAdminURI = `${backendURI}/superAdmin`;
-
+const messageURI = `${backendURI}/messages`;
 const CLOUD_NAME = "davofmwez";
 const preset = "nutrition-preset";
 
@@ -18,4 +18,5 @@ export {
   CLOUD_NAME,
   preset,
   superAdminURI,
+  messageURI,
 };

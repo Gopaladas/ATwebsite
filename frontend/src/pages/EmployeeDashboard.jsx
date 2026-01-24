@@ -8,6 +8,7 @@ import {
   LogOut,
   Search,
   Bell,
+  MessageCircle,
 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,7 @@ import EmployeeProfile from "./components/employee/EmployeeProfile";
 import EmployeeAttendance from "./components/employee/EmployeeAttendance";
 import EmployeeLeaves from "./components/employee/EmployeeLeaves";
 import EmployeeDocuments from "./components/employee/EmployeeDocuments";
+import ChatPage from "./Chat/ChatPage";
 
 const EmployeeDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -110,6 +112,9 @@ const EmployeeDashboardPage = () => {
             fetchDashboardData={fetchDashboardData}
           />
         );
+      case "chat":
+        return <ChatPage user={profile} />;
+
       case "documents":
         return <EmployeeDocuments />;
       default:
@@ -150,6 +155,7 @@ const EmployeeDashboardPage = () => {
             ["attendance", Clock, "Attendance"],
             ["leaves", CalendarDays, "My Leaves"],
             ["documents", FileText, "Documents"],
+            ["chat", MessageCircle, "Chat"],
           ].map(([key, Icon, label]) => (
             <button
               key={key}
@@ -178,7 +184,7 @@ const EmployeeDashboardPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="ml-64 p-6">
+      <div className="ml-64 h-screen flex flex-col overflow-hidden">
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-bold capitalize">
@@ -206,7 +212,7 @@ const EmployeeDashboardPage = () => {
           </div>
         </header>
 
-        <main>{renderContent()}</main>
+        <main className="flex-1 overflow-hidden">{renderContent()}</main>
       </div>
     </div>
   );

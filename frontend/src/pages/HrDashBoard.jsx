@@ -10,6 +10,7 @@ import {
   Home,
   Clock,
   CalendarDays,
+  MessageCircle,
 } from "lucide-react";
 import Dashboard from "./components/hr/Dashboard";
 import HRProfile from "./components/hr/HrProfile";
@@ -22,6 +23,7 @@ import axios from "axios";
 import { hrURI, userURI } from "../mainApi";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import ChatPage from "./Chat/ChatPage";
 
 const HRDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -29,12 +31,25 @@ const HRDashboard = () => {
   const [attendance, setAttendance] = useState([]);
   const [leaves, setLeaves] = useState(mockLeaves);
   const [searchTerm, setSearchTerm] = useState("");
+  const [profile, setProfile] = useState(null);
+
   const navigate = useNavigate();
 
   const token = localStorage.getItem("HrToken");
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
+
+  const fetchProfile = async () => {
+    try {
+      const res = await axios.get(`${hrURI}/getprofile`, {
+        withCredentials: true,
+      });
+      setProfile(res.data.data);
+    } catch (err) {
+      console.error("HR profile fetch error", err);
+    }
+  };
 
   const fetchManagers = async () => {
     try {
@@ -87,6 +102,7 @@ const HRDashboard = () => {
   };
 
   useEffect(() => {
+    fetchProfile();
     fetchManagers();
     fetchAttendance();
   }, []);
@@ -96,15 +112,15 @@ const HRDashboard = () => {
       await axios.patch(
         `${hrURI}/activateManager/${id}`,
         { isActive: true },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       await fetchManagers();
 
       setManagers((prev) =>
         prev.map((manager) =>
-          manager._id === id ? { ...manager, isActive: true } : manager
-        )
+          manager._id === id ? { ...manager, isActive: true } : manager,
+        ),
       );
     } catch (error) {
       console.error(error);
@@ -117,14 +133,14 @@ const HRDashboard = () => {
       await axios.patch(
         `${hrURI}/deleteManager/${id}`,
         { isActive: false },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       await fetchManagers();
       setManagers((prev) =>
         prev.map((manager) =>
-          manager._id === id ? { ...manager, isActive: false } : manager
-        )
+          manager._id === id ? { ...manager, isActive: false } : manager,
+        ),
       );
     } catch (error) {
       console.error(error);
@@ -176,6 +192,9 @@ const HRDashboard = () => {
         );
       case "leaves":
         return <Leaves leaves={leaves} />;
+      case "chat":
+        return <ChatPage user={profile} />;
+
       case "settings":
         return <SettingsPage />;
       default:
@@ -251,6 +270,17 @@ const HRDashboard = () => {
             <CalendarDays className="w-5 h-5" />
             Leaves
           </button>
+          <button
+            onClick={() => setActiveTab("chat")}
+            className={`w-full flex items-center gap-3 px-6 py-3 hover:bg-blue-50 hover:text-blue-600 ${
+              activeTab === "chat"
+                ? "bg-blue-50 text-blue-600 border-r-2 border-blue-600"
+                : "text-gray-600"
+            }`}
+          >
+            <MessageCircle className="w-5 h-5" />
+            Chat
+          </button>
 
           <button
             onClick={() => setActiveTab("settings")}
@@ -277,8 +307,8 @@ const HRDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="ml-64 p-6">
-        <header className="mb-8">
+      <div className="ml-64 h-screen flex flex-col overflow-hidden">
+        <header className="p-6 border-b bg-white">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-800">
               {activeTab === "dashboard" && "HR Dashboard"}
@@ -307,7 +337,7 @@ const HRDashboard = () => {
           </div>
         </header>
 
-        <main>{renderContent()}</main>
+        <main className="flex-1 overflow-hidden p-6">{renderContent()}</main>
       </div>
     </div>
   );

@@ -27,33 +27,33 @@ managerRoute.get(
   "/team-attendance",
   verifyToken,
   managerOnly,
-  getTeamAttendance
+  getTeamAttendance,
 );
 managerRoute.patch(
   "/employees/:id/deactivate",
   verifyToken,
   managerOnly,
-  deactivateEmployee
+  deactivateEmployee,
 );
 
 managerRoute.patch(
   "/employees/:id/activate",
   verifyToken,
   managerOnly,
-  activateEmployee
+  activateEmployee,
 );
 
 managerRoute.get(
   "/attendance/today",
   verifyToken,
   managerOnly,
-  getTodayAttendance
+  getTodayAttendance,
 );
 managerRoute.get(
   "/attendance/monthly",
   verifyToken,
   managerOnly,
-  getMonthlyAttendance
+  getMonthlyAttendance,
 );
 
 managerRoute.get("/team-leaves", verifyToken, managerOnly, getTeamLeaves);
@@ -61,7 +61,7 @@ managerRoute.patch(
   "/leaves/:id/approve",
   verifyToken,
   managerOnly,
-  approveLeave
+  approveLeave,
 );
 managerRoute.patch("/leaves/:id/reject", verifyToken, managerOnly, rejectLeave);
 

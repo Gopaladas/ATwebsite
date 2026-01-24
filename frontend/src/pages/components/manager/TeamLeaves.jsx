@@ -43,15 +43,14 @@ const TeamLeaves = () => {
 
   const handleRejectLeave = async (leaveId) => {
     try {
-      await axios.put(
-        `${userURI}/reject-leave/${leaveId}`,
+      await axios.patch(
+        `${managerURI}/leaves/${leaveId}/reject`,
         {},
         {
           withCredentials: true,
         }
       );
       fetchLeaves();
-      alert("Leave rejected");
     } catch (error) {
       console.error("Error rejecting leave", error);
       alert("Failed to reject leave");

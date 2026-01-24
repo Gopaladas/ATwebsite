@@ -28,6 +28,10 @@ const Login = () => {
       });
       console.log(res);
 
+      const user = res.data.data;
+
+      localStorage.setItem("user", JSON.stringify(user));
+
       const role = res.data.data.role;
       localStorage.setItem("role", role);
 
