@@ -31,6 +31,8 @@ import managerRoute from "./routers/managerRoute.js";
 import employeeRouter from "./routers/employeeRoutes.js";
 import superAdminRoute from "./routers/superAdminRoutes.js";
 import messageRouter from "./routers/messageRoutes.js";
+import managerTaskrouter from "./routers/managerTaskRoutes.js";
+import employeeTaskRouter from "./routers/EmployeeTaskRoutes.js";
 
 app.use("/user", userRoute);
 app.use("/hr", hrRoute);
@@ -38,7 +40,8 @@ app.use("/manager", managerRoute);
 app.use("/employee", employeeRouter);
 app.use("/superAdmin", superAdminRoute);
 app.use("/messages", messageRouter);
-
+app.use("/managerTasks", managerTaskrouter);
+app.use("/employeeTasks", employeeTaskRouter);
 /* ---------- SOCKET SETUP ---------- */
 const server = http.createServer(app);
 

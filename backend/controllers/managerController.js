@@ -1,6 +1,8 @@
 import Attendance from "../models/attendanceModel.js";
 import Holiday from "../models/holidayModel.js";
 import Leave from "../models/leaveModel.js";
+import Project from "../models/Project.js";
+import Sprint from "../models/Sprint.js";
 import User from "../models/userModel.js";
 import sendEmail from "../utils/sendEmail.js";
 
@@ -374,6 +376,23 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// import Sprint from "../models/Sprint.js";
+
+const getMyProjects = async (req, res) => {
+  const projects = await Project.find({ managerId: req.userId }).sort({
+    createdAt: -1,
+  });
+  res.json({ data: projects });
+};
+
+const getSprintsByProject = async (req, res) => {
+  const sprints = await Sprint.find({
+    projectId: req.params.projectId,
+  }).sort({ createdAt: -1 });
+
+  res.json({ data: sprints });
+};
+
 export {
   getManagerProfile,
   getMyEmployees,
@@ -390,4 +409,6 @@ export {
   applyLeave,
   getMyLeaves,
   updateProfile,
+  getMyProjects,
+  getSprintsByProject,
 };

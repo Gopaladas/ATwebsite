@@ -9,6 +9,7 @@ import {
   Search,
   Bell,
   MessageCircle,
+  ClipboardList,
 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +21,8 @@ import EmployeeAttendance from "./components/employee/EmployeeAttendance";
 import EmployeeLeaves from "./components/employee/EmployeeLeaves";
 import EmployeeDocuments from "./components/employee/EmployeeDocuments";
 import ChatPage from "./Chat/ChatPage";
+import MyTasks from "./MyTasks";
+// import TaskBoard from "./TaskBoard";
 
 const EmployeeDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -103,6 +106,11 @@ const EmployeeDashboardPage = () => {
         return (
           <EmployeeProfile profile={profile} fetchProfile={fetchProfile} />
         );
+      // case "tasks":
+      //   return <TaskBoard currentUser={profile} />;
+      case "tasks":
+        return <MyTasks />;
+
       case "attendance":
         return <EmployeeAttendance attendance={attendance} />;
       case "leaves":
@@ -152,6 +160,7 @@ const EmployeeDashboardPage = () => {
           {[
             ["dashboard", Home, "Dashboard"],
             ["profile", User, "My Profile"],
+            ["tasks", ClipboardList, "Tasks"],
             ["attendance", Clock, "Attendance"],
             ["leaves", CalendarDays, "My Leaves"],
             ["documents", FileText, "Documents"],

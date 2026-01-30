@@ -3,6 +3,8 @@ import Holiday from "../models/holidayModel.js";
 import Attendance from "../models/attendanceModel.js";
 import Leave from "../models/leaveModel.js";
 import sendEmail from "../utils/sendEmail.js";
+import Project from "../models/Project.js";
+import Task from "../models/Task.js";
 
 const getHrDetails = async (req, res) => {
   const id = req.userId;
@@ -23,7 +25,7 @@ const getManagers = async (req, res) => {
     console.log(req.userId);
     const list = await User.find(
       { hrId: req.userId, role: "Manager" },
-      "-password"
+      "-password",
     );
     return res
       .status(200)
@@ -37,7 +39,7 @@ const getEmployees = async (req, res) => {
   try {
     const list = await User.find(
       { _id: req.userId, role: "Employee" },
-      "-password"
+      "-password",
     );
     return res
       .status(200)
@@ -385,7 +387,84 @@ const getAllHolidays = async (req, res) => {
   }
 };
 
+// import Project from "../models/Project.js";
+// import User from "../models/User.js";
+
+const createProject = async (req, res) => {
+  const { name, key, description, managerId } = req.body;
+
+  const manager = await User.findById(managerId);
+  if (!manager || manager.role !== "Manager")
+    return res.status(400).json({ message: "Invalid manager" });
+
+  const project = await Project.create({
+    name,
+    key,
+    description,
+    createdBy: req.userId,
+    managerId,
+    teamMembers: [managerId],
+  });
+
+  res.json({ message: "Project created", project });
+};
+
+const getAllProjectsForHR = async (req, res) => {
+  try {
+    const projects = await Project.find()
+      .populate("managerId", "userName email")
+      .populate("createdBy", "userName email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      projects,
+    });
+  } catch (error) {
+    console.error("Get projects error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch projects",
+    });
+  }
+};
+
+const getProjectProgress = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    // Validate project
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    // Get all tasks under this project
+    const totalTasks = await Task.countDocuments({ projectId });
+    const completedTasks = await Task.countDocuments({
+      projectId,
+      status: "DONE",
+    });
+
+    const percentage =
+      totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalTasks,
+        completedTasks,
+        percentage,
+      },
+    });
+  } catch (error) {
+    console.error("Project progress error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export {
+  getAllProjectsForHR,
   getHrDetails,
   getManagers,
   getEmployees,
@@ -399,4 +478,6 @@ export {
   rejectLeave,
   updateProfile,
   getAllHolidays,
+  createProject,
+  getProjectProgress,
 };

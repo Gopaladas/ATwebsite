@@ -3,12 +3,15 @@ import {
   activateManager,
   addPublicHoliday,
   approveLeave,
+  createProject,
   deleteManager,
   getAllHolidays,
+  getAllProjectsForHR,
   getEmployees,
   getHrDetails,
   getManagers,
   getManagersAttendanceForHR,
+  getProjectProgress,
   getTeamLeaves,
   rejectLeave,
   updateProfile,
@@ -29,7 +32,7 @@ hrRoute.get(
   "/manager-attendance",
   verifyToken,
   onlyHr,
-  getManagersAttendanceForHR
+  getManagersAttendanceForHR,
 );
 
 hrRoute.get("/getTeamLeaves", verifyToken, onlyHr, getTeamLeaves);
@@ -37,5 +40,12 @@ hrRoute.patch("/leaves/:id/approve", verifyToken, onlyHr, approveLeave);
 hrRoute.patch("/leaves/:id/reject", verifyToken, onlyHr, rejectLeave);
 hrRoute.put("/update-profile", verifyToken, onlyHr, updateProfile);
 hrRoute.get("/holidays", verifyToken, onlyHr, getAllHolidays);
-
+hrRoute.post("/project", verifyToken, onlyHr, createProject);
+hrRoute.get("/projects", verifyToken, onlyHr, getAllProjectsForHR);
+hrRoute.get(
+  "/projects/:projectId/progress",
+  verifyToken,
+  onlyHr,
+  getProjectProgress,
+);
 export default hrRoute;

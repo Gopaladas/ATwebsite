@@ -24,6 +24,7 @@ import { hrURI, userURI } from "../mainApi";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import ChatPage from "./Chat/ChatPage";
+import HrCreateProject from "./components/hr/HrCreateProject";
 
 const HRDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -182,6 +183,9 @@ const HRDashboard = () => {
             handleDeactivateManager={handleDeactivateManager}
           />
         );
+
+      case "projects":
+        return <HrCreateProject />;
       case "attendance":
         return (
           <Attendance
@@ -245,6 +249,18 @@ const HRDashboard = () => {
           >
             <Users className="w-5 h-5" />
             Manage Managers
+          </button>
+
+          <button
+            onClick={() => setActiveTab("projects")}
+            className={`w-full flex items-center gap-3 px-6 py-3 hover:bg-blue-50 hover:text-blue-600 ${
+              activeTab === "projects"
+                ? "bg-blue-50 text-blue-600 border-r-2 border-blue-600"
+                : "text-gray-600"
+            }`}
+          >
+            <Calendar className="w-5 h-5" />
+            Projects
           </button>
 
           <button

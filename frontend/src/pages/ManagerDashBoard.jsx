@@ -10,6 +10,7 @@ import {
   Clock,
   CalendarDays,
   MessageCircle,
+  ClipboardList,
 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +25,7 @@ import ManagerSettings from "./components/manager/ManagerSettings";
 import ManagerAttendance from "./components/manager/ManagerAttendance";
 import ManagerLeaves from "./components/manager/ManagerLeaves";
 import ChatPage from "./Chat/ChatPage";
+import ManagerProjects from "./components/manager/ManagerTaskBoard";
 
 const ManagerDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -32,6 +34,7 @@ const ManagerDashboardPage = () => {
   const [leaves, setLeaves] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [profile, setProfile] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -151,6 +154,9 @@ const ManagerDashboardPage = () => {
         );
       case "profile":
         return <ManagerProfile />;
+      case "projects":
+        return <ManagerProjects />;
+
       case "myteam":
         return (
           <MyTeam
@@ -190,12 +196,14 @@ const ManagerDashboardPage = () => {
           {[
             ["dashboard", Home, "Dashboard"],
             ["profile", User, "Profile"],
+            ["projects", ClipboardList, "Projects"],
             ["myteam", Users, "My Team"],
             ["myattendance", Clock, "My attendance"],
             ["myleaves", CalendarDays, "My leaves"],
             ["attendance", Clock, "Attendance"],
             ["leaves", CalendarDays, "Leaves"],
             ["chat", MessageCircle, "Chat"],
+
             ["settings", Settings, "Settings"],
           ].map(([key, Icon, label]) => (
             <button

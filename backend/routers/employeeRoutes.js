@@ -25,7 +25,7 @@ employeeRouter.delete(
   "/cancel-leave/:leaveId",
   verifyToken,
   employeeOnly,
-  cancelLeave
+  cancelLeave,
 );
 
 employeeRouter.put("/update-profile", verifyToken, employeeOnly, updateProfile);

@@ -6,6 +6,8 @@ const managerURI = `${backendURI}/manager`;
 const hrURI = `${backendURI}/hr`;
 const superAdminURI = `${backendURI}/superAdmin`;
 const messageURI = `${backendURI}/messages`;
+const managerTaskURI = `${backendURI}/managerTasks`;
+const employeeTaskURI = `${backendURI}/employeeTasks`;
 const CLOUD_NAME = "davofmwez";
 const preset = "nutrition-preset";
 
@@ -19,4 +21,6 @@ export {
   preset,
   superAdminURI,
   messageURI,
+  managerTaskURI,
+  employeeTaskURI,
 };

@@ -11,6 +11,8 @@ import {
   getMyAttendance,
   getMyEmployees,
   getMyLeaves,
+  getMyProjects,
+  getSprintsByProject,
   getTeamAttendance,
   getTeamLeaves,
   getTodayAttendance,
@@ -70,4 +72,13 @@ managerRoute.get("/getMyAttendance", verifyToken, managerOnly, getMyAttendance);
 managerRoute.post("/applyLeave", verifyToken, managerOnly, applyLeave);
 managerRoute.get("/getMyLeaves", verifyToken, managerOnly, getMyLeaves);
 managerRoute.put("/update-profile", verifyToken, managerOnly, updateProfile);
+managerRoute.get("/projects", verifyToken, managerOnly, getMyProjects);
+
+// Get sprints of a specific project
+managerRoute.get(
+  "/projects/:projectId/sprints",
+  verifyToken,
+  managerOnly,
+  getSprintsByProject,
+);
 export default managerRoute;
